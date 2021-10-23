@@ -6,6 +6,7 @@ import static org.springframework.web.reactive.function.server.ServerResponse.no
 import static org.springframework.web.reactive.function.server.ServerResponse.ok;
 
 import com.ffuster.netflux.domain.Movie;
+import com.ffuster.netflux.domain.MovieEvent;
 import com.ffuster.netflux.serivces.MovieService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -25,6 +26,7 @@ public class MovieController {
     return route().path("/movies", builder -> builder
         .GET("/{id}", accept(MediaType.APPLICATION_JSON), this::getMovie)
         .GET("", accept(MediaType.APPLICATION_JSON), this::listMovies))
+        .GET("/{id}/events", accept(MediaType.APPLICATION_JSON), this::streamMovieEvents)
         .build();
   }
 
@@ -35,6 +37,11 @@ public class MovieController {
   }
 
   private Mono<ServerResponse> listMovies(ServerRequest request) {
-    return ok().contentType(MediaType.TEXT_EVENT_STREAM).body(movieService.getAllMovies(), Movie.class);
+    return ok().contentType(MediaType.APPLICATION_JSON).body(movieService.getAllMovies(), Movie.class);
   }
+
+  private Mono<ServerResponse> streamMovieEvents(ServerRequest request){
+    String id = request.pathVariable("id");
+    return ok().contentType(MediaType.TEXT_EVENT_STREAM).body(movieService.streamMovieEvents(id), MovieEvent.class);
+  };
 }
